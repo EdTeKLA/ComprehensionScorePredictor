@@ -17,7 +17,7 @@ def create_emb_layer(weights_matrix, non_trainable=False):
 
 class BiLSTM(nn.Module):
     # https://galhever.medium.com/sentiment-analysis-with-pytorch-part-4-lstm-bilstm-model-84447f6c4525
-    def __init__(self, hidden_dim1, hidden_dim2, output_dim, n_layers, dropout):
+    def __init__(self, vocab_size, hidden_dim1, hidden_dim2, n_layers, dropout):
         super().__init__()
         # embedding layer
         # weights_matrix = pickle.load(open('vocab_embedding.pkl','rb'))
@@ -25,15 +25,15 @@ class BiLSTM(nn.Module):
         
         # self.embedding, num_embeddings, embedding_dim = create_emb_layer(weights_matrix)        # 
         embedding_dim = 300
-        self.embedding = nn.Embedding(512, 300)
+        self.embedding = nn.Embedding(vocab_size, 300)
         # biLSTM layer
         self.lstm = nn.LSTM(embedding_dim,
                             hidden_dim1,
                             num_layers=n_layers,
                             bidirectional=True,
-                            batch_first=True)
+                            batch_first=True,)
         self.fc1 = nn.Linear(hidden_dim1 * 2, hidden_dim2)
-        self.fc2 = nn.Linear(hidden_dim2, output_dim)
+        self.fc2 = nn.Linear(hidden_dim2, 1)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(dropout)
         # activation function
@@ -44,7 +44,6 @@ class BiLSTM(nn.Module):
         embedded = self.embedding(text)
         # embedded = [batch size, sent_len, emb dim]
 
-        print(text_lengths)
         # packed sequence
         packed_embedded = pack_padded_sequence(embedded, text_lengths, batch_first=True) # unpad
 
