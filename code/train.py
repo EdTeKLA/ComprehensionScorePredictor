@@ -172,9 +172,7 @@ def main():
     print(f'Number of testing examples: {len(test_data)}')
 
     text.build_vocab(train_data,vectors="glove.6B.300d")
-    train_iterator, test_iterator = BucketIterator.splits(
-    (train_data, test_data), batch_size=32,
-    )
+    
     # print(train_data.dir())
     train_iterator, valid_iterator, test_iterator = create_iterator(train_data, valid_data, test_data, batch_size)
 
