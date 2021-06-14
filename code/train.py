@@ -58,12 +58,6 @@ def train(model, iterator, optimizer, criterion):
         # loss = criterion(predictions.squeeze(1), batch.score.type_as(predictions))
         loss = criterion(predictions.squeeze(1), batch.score)
 
-        # print(predictions.shape)
-        # print(batch.score.shape)
-        # print(predictions)
-        # print(batch.text.shape)
-        # print(batch.score)
-
         acc = accuracy(predictions, batch.score)
 
         # perform backpropagation
@@ -74,7 +68,7 @@ def train(model, iterator, optimizer, criterion):
         epoch_loss += loss.item()
         epoch_acc += acc.item()
 
-    return epoch_loss / len(iterator), epoch_acc / len(iterator)
+    return epoch_loss / len(iterator)#, epoch_acc / len(iterator)
 
 def evaluate(model, iterator, criterion):
     epoch_loss = 0
@@ -96,7 +90,7 @@ def evaluate(model, iterator, criterion):
             epoch_loss += loss.item()
             epoch_acc += acc.item()
 
-    return epoch_loss / len(iterator), epoch_acc / len(iterator)
+    return epoch_loss / len(iterator)#, epoch_acc / len(iterator)
 
 def predict(model, sentence, text):
     tokenized = cleanup_text(sentence)  #tokenize the sentence 
@@ -108,24 +102,24 @@ def predict(model, sentence, text):
     prediction = model(tensor, length_tensor)                  #prediction 
     return prediction.item()
 
-def run_train(epochs, model, train_iterator, valid_iterator, optimizer, criterion, model_type):
+def run_train(epochs, model, train_iterator, valid_iterator, optimizer, criterion, grade_name):
     best_valid_loss = float('inf')
 
     for epoch in range(epochs):
 
         # train the model
-        train_loss, train_acc = train(model, train_iterator, optimizer, criterion)
+        train_loss = train(model, train_iterator, optimizer, criterion)
 
         # evaluate the model
-        valid_loss, valid_acc = evaluate(model, valid_iterator, criterion)
+        valid_loss = evaluate(model, valid_iterator, criterion)
 
         # save the best model
         if valid_loss < best_valid_loss:
             best_valid_loss = valid_loss
-            torch.save(model.state_dict(), 'saved_weights'+'_'+model_type+'.pt')
+            torch.save(model.state_dict(), 'saved_weights'+'_'+grade_name+'.pt')
 
-        print(f'\tTrain Loss: {train_loss:.3f} | Train Acc: {train_acc * 100:.2f}%')
-        print(f'\t Val. Loss: {valid_loss:.3f} |  Val. Acc: {valid_acc * 100:.2f}%')
+        print(f'\nTrain Loss: {train_loss:.3f}')# | Train Acc: {train_acc * 100:.2f}%')
+        print(f'Validation Loss: {valid_loss:.3f}')# |  Val. Acc: {valid_acc * 100:.2f}%')
 
 
 def plot_loss_and_accuracy(history):
@@ -145,17 +139,18 @@ def plot_loss_and_accuracy(history):
     plt.show()
 
 def main():
-    train = True
-    lr = 1e-3
-    batch_size = 50
-    dropout_keep_prob = 0.5
+    train = False
+    lr = 1e-2
+    batch_size = 500
+    dropout_keep_prob = 0.1
     max_document_length = 100  # each sentence has until 100 words
     dev_size = 0.9 # split percentage to train\validation data
     seed = 1
     num_hidden_nodes = 64
     hidden_dim2 = 128
-    num_layers = 2  # LSTM layers
+    num_layers = 1  # LSTM layers
     num_epochs = 10
+    grade_name = "gr5"
 
     text = Field(sequential=True, use_vocab=True, preprocessing=cleanup_text, lower=True, batch_first=True, include_lengths=True)
     score = Field(sequential=False, use_vocab = False, dtype=torch.float, batch_first=True)
@@ -163,7 +158,7 @@ def main():
     fields = {"text": ("text", text), "score": ("score",score)}
 
     train_data, test_data = TabularDataset.splits(
-    path="../data/", train="train.csv", test="test.csv", format="csv", fields=fields
+    path="../data/"+grade_name, train="train.csv", test="test.csv", format="csv", fields=fields
     )
 
     train_data, valid_data = train_data.split(split_ratio=dev_size, random_state=random.seed(seed))
@@ -177,8 +172,6 @@ def main():
     train_iterator, valid_iterator, test_iterator = create_iterator(train_data, valid_data, test_data, batch_size)
 
     model = BiLSTM(len(text.vocab), num_hidden_nodes, hidden_dim2 , num_layers, dropout_keep_prob)
-    
-    print(text.vocab.vectors)
 
     #No. of unique tokens in label
     print("Size of vocabulary:",len(text.vocab))
@@ -199,15 +192,14 @@ def main():
     # train and evaluation
     if (train):
         # train and evaluation
-        run_train(num_epochs, model, train_iterator, valid_iterator, optimizer, loss, 'LSTM')
+        run_train(num_epochs, model, train_iterator, valid_iterator, optimizer, loss, grade_name)
 
         # load weights
-    model.load_state_dict(torch.load(os.path.join('./', "saved_weights_LSTM.pt")))
+    model.load_state_dict(torch.load(os.path.join('./', 'saved_weights'+'_'+grade_name+'.pt')))
     # predict
-    test_loss, test_acc = evaluate(model, test_iterator, loss)
-    print(f'Test Loss: {test_loss:.3f} | Test Acc: {test_acc * 100:.2f}%')
-
-    sentence = "Tammy is playing football outside."
+    test_loss = evaluate(model, test_iterator, loss)
+    print(f'Test Loss: {test_loss:.3f}')
+    sentence = "I come to dance class early, to stretch in the quiet of the room. My body quivers, thinking of tonight. The class begins. I exercise hard, till sweat streams down my face and back. Music fills the room. We do our leaps across the floor. We want to dance full out, but our teacher tells us. Now we'll go home to rest and prepare, because tonight, there is a performance."
     print(predict(model, sentence, text))
 
 if __name__ == '__main__':
