@@ -46,12 +46,7 @@ for i in range(len(questions_ranges)):
 
 df = pd.read_excel(scores_path)
 
-print(df.index)
-count = 0
 for i in df.index:
-    if df[f"Gr{grade}.RC.Gates_"+"{:02d}".format(1)][i] < 0:
-        count += 1
-        continue
     for q_index, q_range in enumerate(questions_ranges):
         total_score = 0
         total_skip = 0
@@ -62,7 +57,7 @@ for i in df.index:
                 total_skip += 1
         score_data[q_index+1].append(total_score/(q_range[1]-q_range[0]+1))
         score_data["skip"+str(q_index+1)].append(total_skip/(q_range[1]-q_range[0]+1))
-print(count)
+
 if graph_subtest_mean:
     points = []
     for i in range(len(questions_ranges)):

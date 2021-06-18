@@ -11,6 +11,8 @@ from BiLSTM import BiLSTM
 
 # Useful Link:
 # https://www.analyticsvidhya.com/blog/2020/01/first-text-classification-in-pytorch/
+# https://github.com/aladdinpersson/Machine-Learning-Collection/blob/master/ML/Pytorch/more_advanced/torchtext/torchtext_tutorial1.py
+# https://github.com/galhev/Neural-Sentiment-Analyzer-for-Modern-Hebrew/blob/8e247c5dc41b8d2e5a9b41581273c426575e4708/models/lstm_model.py#L5
 def accuracy(probs, target):
     winners = probs.argmax(dim=1)
     corrects = (winners == target)
