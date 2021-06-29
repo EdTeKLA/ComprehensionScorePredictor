@@ -108,7 +108,7 @@ def run_train(epochs, model, train_iterator, valid_iterator, optimizer, criterio
     best_valid_loss = float('inf')
 
     for epoch in range(epochs):
-
+        print('epoch:', epoch)
         # train the model
         train_loss = train(model, train_iterator, optimizer, criterion)
 
@@ -141,18 +141,19 @@ def plot_loss_and_accuracy(history):
     plt.show()
 
 def main():
-    train = False
-    lr = 1e-2
+    train = True
+    lr = 1e-3
     batch_size = 500
     dropout_keep_prob = 0.1
-    max_document_length = 100  # each sentence has until 100 words
+    # max_document_length = 100  # each sentence has until 100 words
     dev_size = 0.9 # split percentage to train\validation data
     seed = 1
     num_hidden_nodes = 64
     hidden_dim2 = 128
     num_layers = 1  # LSTM layers
-    num_epochs = 10
-    grade_name = "gr5"
+    num_epochs = 9
+    grade_name = "gr3"
+    print(f"{grade_name} model\n")
 
     text = Field(sequential=True, use_vocab=True, preprocessing=cleanup_text, lower=True, batch_first=True, include_lengths=True)
     score = Field(sequential=False, use_vocab = False, dtype=torch.float, batch_first=True)
