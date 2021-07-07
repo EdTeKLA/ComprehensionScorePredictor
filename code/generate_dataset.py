@@ -7,9 +7,10 @@ import statistics
 # Make sure the current working directory is correct
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-graph_subtest_mean = True
+graph_subtest_mean = False
 graph_subtest_skips = False
-generate = False
+generate = True
+generate_no_skill = False
 grade = "3"
 target_path = f"../data/gr{grade}/gr{grade}_score.csv"
 scores_path = "../Gates.ReadComp_By-Item_Gr3-5(CM).xlsx"
@@ -27,17 +28,17 @@ with open(corpus_path,'r') as fp:
 df = pd.read_excel(scores_path)
 sub_test_number = df.columns[1:]
 
-# #gr3
-# questions_ranges = [(1,5), (6,8), (9,13), (14,16), (17,21), (22,27), (28,30),
-#                    (31,35), (36,40), (41,43), (44,48)]
+#gr3
+questions_ranges = [(1,5), (6,8), (9,13), (14,16), (17,21), (22,27), (28,30),
+                   (31,35), (36,40), (41,43), (44,48)]
 
 #gr4
 # questions_ranges = [(1,4), (5,8), (9,13), (14,16), (17,19), (20,25), (26,29),
 #                    (30,34), (35,39), (40,44), (45,48)]
 
-# # gr5
-questions_ranges = [(1,3), (4,6), (7,11), (12,14), (15,19), (20,25), (26,30),
-                   (31,34), (35,38), (39,43), (44,48)]
+# # # gr5
+# questions_ranges = [(1,3), (4,6), (7,11), (12,14), (15,19), (20,25), (26,30),
+#                    (31,34), (35,38), (39,43), (44,48)]
 
 score_data = {}
 for i in range(len(questions_ranges)):
@@ -55,8 +56,10 @@ for i in df.index:
                 total_score +=1
             if df[f"Gr{grade}.RC.Gates_"+"{:02d}".format(j)][i] == 2:
                 total_skip += 1
+        
         score_data[q_index+1].append(total_score/(q_range[1]-q_range[0]+1))
-        score_data["skip"+str(q_index+1)].append(total_skip/(q_range[1]-q_range[0]+1))
+        score_data["skip"+str(q_index+1)]\
+        .append(total_skip/(q_range[1]-q_range[0]+1))
 
 if graph_subtest_mean:
     points = []
@@ -96,9 +99,24 @@ if generate:
 
     data = {'text': text,
             'score': score,}
+    
+    if generate_no_skill:
+        target_df = pd.DataFrame(data, columns = ['text', 'score'])
+        target_df.to_csv(target_path, index=False)
 
-    target_df = pd.DataFrame(data, columns = ['text', 'score'])
+    else:
+        df2 = pd.read_excel("../data/gr3/gr3_features.xlsx")
+        # iterate through every variable
+        for col in df2.columns[1:]:
+            values = []
+            for i in df2.index:
+                for _ in range(11):
+                    values.append(df2[col][i])# each student has 11 different
+                    # subtest with the same skill variables
+            data[col] = values
+        for key in data.keys():
+            print(key,len(data[key]))
+        target_df = pd.DataFrame(data, columns = data.keys())
+        target_df.to_csv(target_path, index=False)
 
-    print(target_df)
 
-    target_df.to_csv(target_path, index=False)
