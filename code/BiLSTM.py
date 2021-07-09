@@ -17,7 +17,7 @@ def create_emb_layer(weights_matrix, non_trainable=False):
 
 class BiLSTM(nn.Module):
     # https://galhever.medium.com/sentiment-analysis-with-pytorch-part-4-lstm-bilstm-model-84447f6c4525
-    def __init__(self, vocab_size, hidden_dim1, hidden_dim2, n_layers, dropout):
+    def __init__(self, vocab_size, hidden_dim1, hidden_dim2, n_layers, dropout,skills_size, skill_dim):
         super().__init__()
         # embedding layer
         # weights_matrix = pickle.load(open('vocab_embedding.pkl','rb'))
@@ -26,6 +26,7 @@ class BiLSTM(nn.Module):
         # self.embedding, num_embeddings, embedding_dim = create_emb_layer(weights_matrix)        # 
         embedding_dim = 300
         self.embedding = nn.Embedding(vocab_size, 300)
+        self.number_embed = nn.Embedding(skills_size, 3)
         # biLSTM layer
         self.lstm = nn.LSTM(embedding_dim,
                             hidden_dim1,
@@ -33,14 +34,20 @@ class BiLSTM(nn.Module):
                             bidirectional=True,
                             batch_first=True,)
         self.fc1 = nn.Linear(hidden_dim1 * 2, hidden_dim2)
-        self.fc2 = nn.Linear(hidden_dim2, 1)
+        self.fc_skill = nn.Linear(8, skill_dim)
+        self.fc2 = nn.Linear(hidden_dim2+skill_dim, 1)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(dropout)
         # activation function
         self.act = nn.Sigmoid()
     
-    def forward(self, text, text_lengths):
+    def forward(self, text, text_lengths, skills):
         # text = [batch size,sent_length]
+        skills_number = self.number_embed(skills)
+        skills_number = skills_number[:,:,0]
+        print(skills_number.shape)
+        print(skills_number[0])
+        skills = self.fc_skill(skills_number)
         embedded = self.embedding(text)
         # embedded = [batch size, sent_len, emb dim]
 
@@ -59,7 +66,7 @@ class BiLSTM(nn.Module):
         dense1 = self.fc1(rel)
 
         drop = self.dropout(dense1)
-        preds = self.fc2(drop)
+        preds = self.fc2(torch.cat((drop,skills),dim=1))
 
         # Final activation function
         preds = self.act(preds)
