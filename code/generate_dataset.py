@@ -106,8 +106,8 @@ if generate:
 
     else:
         df2 = pd.read_excel("../data/gr3/gr3_features.xlsx")
-        # iterate through every variable
-        for col in df2.columns[1:]:
+        # iterate through every variable except for id and raw score
+        for col in df2.columns[1:-1]:
             values = []
             for i in df2.index:
                 for _ in range(11):
@@ -116,7 +116,17 @@ if generate:
             data[col] = values
         for key in data.keys():
             print(key,len(data[key]))
-        target_df = pd.DataFrame(data, columns = data.keys())
+        
+        data['skills'] = []
+        print(df2.columns)
+        for i in df2.index:
+            skill = []
+            for col in df2.columns[1:-1]:
+                skill.append(df2[col][i])
+            for _ in range(11):
+                data["skills"].append(skill)
+            
+        target_df = pd.DataFrame(data, columns = ['text', 'score', 'skills'])
         target_df.to_csv(target_path, index=False)
 
 
