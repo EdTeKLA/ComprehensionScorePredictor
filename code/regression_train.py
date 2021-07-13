@@ -1,7 +1,13 @@
+'''
+Regression Neural Network for score prediction
+Followed instruction from:
+https://visualstudiomagazine.com/articles/2021/02/11/pytorch-define.aspx
+'''
+
 import torch as T
 from torch import utils
 import numpy as np
-import time
+from sklearn.model_selection import KFold
 
 from regression_net import Net
 
@@ -10,7 +16,7 @@ class ComprehensionDataset(utils.data.Dataset):
 
     def __init__(self, src_file, m_rows=None):
         all_xy = np.loadtxt(src_file, max_rows=m_rows,
-        usecols=[0,1,2,3,4,5,6,7,8,9], delimiter=",",
+        usecols=[1,2,3,4,5,6,7,8,9,10], delimiter=",",
         comments="#", skiprows=1, dtype=np.float32)
 
         tmp_x = all_xy[:,[0,1,2,3,4,5,6,7,8]]
@@ -29,7 +35,7 @@ class ComprehensionDataset(utils.data.Dataset):
         score = self.y_data[idx,:] 
         return (preds, score)       # tuple of two matrices 
 
-def accuracy(model, ds, pct):
+def accuracy(model, ds):
     # assumes model.eval()
     # percent correct within pct of true house price
     total = 0
@@ -38,8 +44,7 @@ def accuracy(model, ds, pct):
     for i in range(len(ds)):
         (X, Y) = ds[i]            # (predictors, target)
         with T.no_grad():
-            oupt = model(X)         # computed price
-
+            oupt = model(X)
         abs_delta += np.abs(oupt.item() - Y.item())
 
         total += 1
@@ -47,11 +52,31 @@ def accuracy(model, ds, pct):
     acc = abs_delta / total
     return acc
 
+def accuracy_simple(model, ds, pct):
+  # assumes model.eval()
+  # percent correct within pct of true house price
+  n_correct = 0; n_wrong = 0
+
+  for i in range(len(ds)):
+    (X, Y) = ds[i]            # (predictors, target)
+    with T.no_grad():
+      oupt = model(X)         # computed price
+
+    abs_delta = np.abs(oupt.item() - Y.item())
+    max_allow = np.abs(pct * Y.item())
+    if abs_delta < (pct*48):
+      n_correct +=1
+    else:
+      n_wrong += 1
+
+  acc = (n_correct * 1.0) / (n_correct + n_wrong)
+  return acc
+
 def main():
-    train_file = "../data/gr3/train_regression.csv"
+    train_file = "../data/gr3/cg_train.csv"
     train_ds = ComprehensionDataset(train_file)
 
-    test_file = "../data/gr3/test_regression.csv"
+    test_file = "../data/gr3/cg_test.csv"
     test_ds = ComprehensionDataset(test_file)
 
     bat_size = 10
@@ -64,7 +89,7 @@ def main():
     # 3. train model
     max_epochs = 500
     ep_log_interval = 50
-    lrn_rate = 0.005
+    lrn_rate = 0.002
 
     loss_func = T.nn.MSELoss()
     # optimizer = T.optim.SGD(net.parameters(), lr=lrn_rate)
@@ -112,10 +137,12 @@ def main():
     # 4. evaluate model accuracy
     print("\nComputing model accuracy")
     net.eval()
-    acc_train = accuracy(net, train_ds, 0.10) 
+    acc_train = accuracy(net, train_ds) 
     print("Accuracy on train data = %0.4f" % acc_train)
-    acc_test = accuracy(net, test_ds, 0.10) 
+    print(accuracy_simple(net, train_ds, 0.15))
+    acc_test = accuracy(net, test_ds) 
     print("Accuracy on test data = %0.4f" % acc_test)
+    print(accuracy_simple(net, test_ds, 0.15))
 
 if __name__ == '__main__':
     main()
