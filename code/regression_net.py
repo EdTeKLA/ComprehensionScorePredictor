@@ -5,9 +5,9 @@ torch.manual_seed(0)
 class Net(nn.Module):
   def __init__(self):
     super(Net, self).__init__()
-    self.hid1 = nn.Linear(9,27)  # 9-(10-10)-1
+    self.hid1 = nn.Linear(11,22)  # 9-(10-10)-1
     # self.drop = nn.Dropout(p=0.1)
-    self.hid2 = nn.Linear(27, 10)
+    self.hid2 = nn.Linear(22, 10)
     self.oupt = nn.Linear(10, 1)
 
     nn.init.xavier_uniform_(self.hid1.weight)

@@ -8,6 +8,7 @@ import torch as T
 from torch import utils
 import numpy as np
 from sklearn.model_selection import KFold
+from sklearn.metrics import r2_score
 
 from regression_net import Net
 
@@ -16,11 +17,11 @@ class ComprehensionDataset(utils.data.Dataset):
 
     def __init__(self, src_file, m_rows=None):
         all_xy = np.loadtxt(src_file, max_rows=m_rows,
-        usecols=[1,2,3,4,5,6,7,8,9,10], delimiter=",",
+        usecols=[0,1,2,3,4,5,6,7,8,9,10,11], delimiter=",",
         comments="#", skiprows=1, dtype=np.float32)
 
-        tmp_x = all_xy[:,[0,1,2,3,4,5,6,7,8]]
-        tmp_y = all_xy[:,9].reshape(-1,1)    # 2-D required
+        tmp_x = all_xy[:,[0,1,2,3,4,5,6,7,8,9,10]]
+        tmp_y = all_xy[:,11].reshape(-1,1)    # 2-D required
 
         self.x_data = T.tensor(tmp_x, \
         dtype=T.float32)
@@ -52,6 +53,17 @@ def accuracy(model, ds):
     acc = abs_delta / total
     return acc
 
+def get_r2(model,ds):
+    pred = []
+    true = []
+    for i in range(len(ds)):
+        (X, Y) = ds[i]            # (predictors, target)
+        with T.no_grad():
+            oupt = model(X)
+        pred += oupt
+        true += Y
+    return r2_score(true, pred)
+
 def accuracy_simple(model, ds, pct):
   # assumes model.eval()
   # percent correct within pct of true house price
@@ -73,10 +85,10 @@ def accuracy_simple(model, ds, pct):
   return acc
 
 def main():
-    train_file = "../data/gr3/cg_train.csv"
+    train_file = "../data/regression/train_gr3-gr4-gr5.csv"
     train_ds = ComprehensionDataset(train_file)
 
-    test_file = "../data/gr3/cg_test.csv"
+    test_file = "../data/regression/test_gr3-gr4-gr5.csv"
     test_ds = ComprehensionDataset(test_file)
 
     bat_size = 10
@@ -87,8 +99,8 @@ def main():
     net = Net()
 
     # 3. train model
-    max_epochs = 500
-    ep_log_interval = 50
+    max_epochs = 100
+    ep_log_interval = 25
     lrn_rate = 0.002
 
     loss_func = T.nn.MSELoss()
@@ -138,11 +150,14 @@ def main():
     print("\nComputing model accuracy")
     net.eval()
     acc_train = accuracy(net, train_ds) 
-    print("Accuracy on train data = %0.4f" % acc_train)
-    print(accuracy_simple(net, train_ds, 0.15))
+    print("Mean error on training data = %0.4f" % acc_train)
+    print("R Squared score = %0.4f" % get_r2(net,train_ds))
+    print("Accuracy (0.15 tolerance) = %0.4f" % accuracy_simple(net, train_ds, 0.15))
+
     acc_test = accuracy(net, test_ds) 
-    print("Accuracy on test data = %0.4f" % acc_test)
-    print(accuracy_simple(net, test_ds, 0.15))
+    print("Mean error on training data = %0.4f" % acc_test)
+    print("R Squared score = %0.4f" % get_r2(net,test_ds))
+    print("Accuracy (0.15 tolerance) = %0.4f" % accuracy_simple(net, test_ds, 0.15))
 
 if __name__ == '__main__':
     main()

@@ -1,11 +1,11 @@
+from sklearn.metrics import r2_score
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
-from torchtext import data
+import torchtext.vocab as vocab
+from torchtext.legacy.data import Field, TabularDataset, BucketIterator
 import matplotlib.pyplot as plt
 import random
-from torchtext.legacy.data import Field, TabularDataset, BucketIterator
-import torchtext.vocab as vocab
+
 import json
 import os
 from BiLSTM import BiLSTM
@@ -86,6 +86,9 @@ def evaluate(model, iterator, criterion):
     epoch_loss = 0
     epoch_acc = 0
 
+    pred = []
+    true = []
+
     model.eval()
 
     with torch.no_grad():
@@ -97,11 +100,15 @@ def evaluate(model, iterator, criterion):
 
             loss = criterion(predictions.squeeze(), batch.score)
 
+            pred += predictions
+            true += batch.score
             
             acc = accuracy(predictions, batch.score)
 
             epoch_loss += loss.item()
             epoch_acc += acc.item()
+    
+    print(r2_score(true, pred))
 
     return epoch_loss / len(iterator)#, epoch_acc / len(iterator)
 
@@ -160,10 +167,10 @@ def main():
     dev_size = 0.9 # split percentage to train\validation data
     seed = 1
     num_hidden_nodes = 64
-    hidden_dim2 = 128
-    skill_dim = 32
+    hidden_dim2 = 64
+    skill_dim = 16
     num_layers = 1  # LSTM layers
-    num_epochs = 9
+    num_epochs = 20
     grade_name = "gr3"
     print(f"{grade_name} model\n")
 
