@@ -3,6 +3,7 @@ from scipy.stats import spearmanr
 from scipy.stats import pearsonr
 import itertools
 import numpy as np
+from sklearn import preprocessing
 
 feature_path = "../SoR_Alberta.Shared.Data.and.Codebook.xlsx"#"../data/gr3/gr3_features.xlsx"
 feature_names = ['G3.PPVT.Vocab.raw',
@@ -35,6 +36,11 @@ for i in df.index:
         continue
     for name in feature_names:
         data[name].append(df[name][i])
+
+# normalize each feature with max norm
+for name in feature_names[0:-1]:
+    new_data = np.asarray(data[name]).reshape(-1, 1)
+    data[name] = preprocessing.normalize(new_data, norm='max',axis=0).reshape(-1,1).squeeze()
 
 target_df = pd.DataFrame(data, columns = feature_names)
 target_df.to_csv(target_path, index=False)
