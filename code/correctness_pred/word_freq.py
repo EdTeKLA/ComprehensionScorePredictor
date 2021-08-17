@@ -34,44 +34,45 @@ def preprocess(corpus):
 
     return stemmed
 
-with open("../../data/cbt_test.txt",'r') as file:
-    corpus = file.read().replace('\n', ' ')
-words = preprocess(corpus)
-freq = Counter(words)
+if __name__ == '__main__':
+    with open("../../data/cbt_test.txt",'r') as file:
+        corpus = file.read().replace('\n', ' ')
+    words = preprocess(corpus)
+    freq = Counter(words)
 
-print('vocab size:', len(freq))
-# for key in list(freq.keys())[0:10]:
-#     print(key, freq[key])
+    print('vocab size:', len(freq))
+    # for key in list(freq.keys())[0:10]:
+    #     print(key, freq[key])
 
-ranking = sorted(freq.items(),key=lambda item:item[1],reverse=True)
+    ranking = sorted(freq.items(),key=lambda item:item[1],reverse=True)
 
-threshold = 5
-rare_words = []
-wordlist = []
-data_pts = []
+    threshold = 5
+    rare_words = []
+    wordlist = []
+    data_pts = []
 
-for i in range(0,len(ranking),5):
-    value = ranking[i][1]
-    data_pts.append(value)
+    for i in range(0,len(ranking),5):
+        value = ranking[i][1]
+        data_pts.append(value)
 
-for i in range(len(ranking)):
-    if ranking[i][1] <= threshold:
-        rare_words.append(ranking[i][0])
-    else:
-        wordlist.append(ranking[i][0])
+    for i in range(len(ranking)):
+        if ranking[i][1] <= threshold:
+            rare_words.append(ranking[i][0])
+        else:
+            wordlist.append(ranking[i][0])
 
-print("First 50 rare words:\n", rare_words[:50])
-print("Last 50 common words\n", wordlist[:50])
-print("Number of words in common words list:\n", len(wordlist))
-print("Number of words in rare words list:\n", len(rare_words))
+    print("First 50 rare words:\n", rare_words[:50])
+    print("Last 50 common words\n", wordlist[:50])
+    print("Number of words in common words list:\n", len(wordlist))
+    print("Number of words in rare words list:\n", len(rare_words))
 
-with open("wordlist.pkl",'wb') as fp:
-    pickle.dump(wordlist, fp)
+    with open("wordlist.pkl",'wb') as fp:
+        pickle.dump(wordlist, fp)
 
-# plt.plot(data_pts)
-# plt.title('Sorted word frequency')
-# plt.show()
+    # plt.plot(data_pts)
+    # plt.title('Sorted word frequency')
+    # plt.show()
 
-# lemmatizer = WordNetLemmatizer()
-# print(lemmatizer.lemmatize('corpora'))
-# print(lemmatizer.lemmatize('better'))
+    # lemmatizer = WordNetLemmatizer()
+    # print(lemmatizer.lemmatize('corpora'))
+    # print(lemmatizer.lemmatize('better'))
