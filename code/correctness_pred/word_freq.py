@@ -29,13 +29,13 @@ def preprocess(corpus):
     lemmatizer = WordNetLemmatizer()
     lemmatized = [lemmatizer.lemmatize(word) for word in filtered_words]
 
-    porter = PorterStemmer()
-    stemmed = [porter.stem(word) for word in lemmatized]
+    # porter = PorterStemmer()
+    # stemmed = [porter.stem(word) for word in lemmatized]
 
-    return stemmed
+    return lemmatized
 
 if __name__ == '__main__':
-    with open("../../data/cbt_test.txt",'r') as file:
+    with open("../../data/cbt_whole.txt",'r') as file:
         corpus = file.read().replace('\n', ' ')
     words = preprocess(corpus)
     freq = Counter(words)
@@ -46,12 +46,12 @@ if __name__ == '__main__':
 
     ranking = sorted(freq.items(),key=lambda item:item[1],reverse=True)
 
-    threshold = 5
+    threshold = ranking[700][1]
     rare_words = []
     wordlist = []
     data_pts = []
 
-    for i in range(0,len(ranking),5):
+    for i in range(0,len(ranking)):
         value = ranking[i][1]
         data_pts.append(value)
 
@@ -62,16 +62,20 @@ if __name__ == '__main__':
             wordlist.append(ranking[i][0])
 
     print("First 50 rare words:\n", rare_words[:50])
-    print("Last 50 common words\n", wordlist[:50])
+    print("Last 50 common words\n", wordlist[-50:])
     print("Number of words in common words list:\n", len(wordlist))
     print("Number of words in rare words list:\n", len(rare_words))
 
     with open("wordlist.pkl",'wb') as fp:
         pickle.dump(wordlist, fp)
 
-    # plt.plot(data_pts)
-    # plt.title('Sorted word frequency')
-    # plt.show()
+    plt.plot(data_pts)
+    plt.axvline(x=700, label='Threshold at x = {}'.format(700), c='r', linestyle = '--')
+    plt.title("Children's Book Test Word Frequency")
+    plt.xlabel('Word Index')
+    plt.ylabel('Frequency')
+    plt.legend()
+    plt.show()
 
     # lemmatizer = WordNetLemmatizer()
     # print(lemmatizer.lemmatize('corpora'))

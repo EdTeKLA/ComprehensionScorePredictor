@@ -105,14 +105,14 @@ def McNemar_test(pred_1,pred_2,y):
     return tr,bl
 
 def main():
-    model_1 = SimpleNet(12)
-    model_1.load_state_dict(torch.load('basemodel_full.pt'))
+    # model_1 = SimpleNet(12)
+    # model_1.load_state_dict(torch.load('basemodel_full.pt'))
     # fullmodel
 
-    # model_2 = BertModel(64, 13, 0.1)
-    # model_2.load_state_dict(torch.load('fullmodel.pt'))
-    model_2 = SimpleNet(6)
-    model_2.load_state_dict(torch.load('basemodel.pt'))
+    model_1 = BertModel(64, 12, 0.1)
+    model_1.load_state_dict(torch.load('fullmodel1.pt'))
+    model_2 = SimpleNet(12)
+    model_2.load_state_dict(torch.load('basemodel_full.pt'))
 
     with open("data.pkl",'rb') as fp:
         data = pickle.load(fp)
@@ -123,9 +123,9 @@ def main():
 
     model_1.eval()
     model_2.eval()
-    # pred_1 = model_1(test_ds['skills'],test_ds['subtests'],test_ds['questions'],test_ds['answers']).squeeze(1)
-    pred_1 = model_1(test_ds['skills']).squeeze(1)
-    
+    pred_1 = model_1(test_ds['skills'],test_ds['subtests'],test_ds['questions'],test_ds['answers']).squeeze(1)
+    # pred_1 = model_1(test_ds['skills']).squeeze(1)
+
     pred_2 = model_2(test_ds['skills']).squeeze(1)
     # pred_2 = model_2(test_ds['skills'],test_ds['subtests'],test_ds['questions'],test_ds['answers']).squeeze(1)
 
